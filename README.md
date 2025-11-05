@@ -16,7 +16,12 @@ Lite Python-program for å gjøre enkle beregninger, tilgjengelig i både CLI og
   - **M+**: Legger resultatet til minnet
   - **M-**: Trekker resultatet fra minnet
   - **MR**: Viser minnets verdi
+  - **MC**: Tømmer minnet
 - **Støtte for norsk komma**: Både '.' og ',' fungerer som desimalskille
+- **Tallknapper (GUI)**: 0-9 for å legge til siffer i fokusert felt
+- **Desimalknapper (GUI)**: . og , (konverteres automatisk til .)
+- **Backspace (⌫)**: Fjerner siste tegn fra fokusert felt
+- **+/- knapp**: Bytter fortegn på tallet i fokusert felt
 
 ## Krav
 - Python 3.7 eller nyere
@@ -40,29 +45,53 @@ py gui_calculator.py
 
 ## GUI-funksjoner
 
+### Layout
+
+GUI-kalkulatoren har følgende komponenter:
+- **Inputfelt**: To felt for "Første tall" og "Andre tall"
+- **Resultatfelt**: Viser resultat av beregninger (readonly)
+- **Minnevisning**: Viser nåværende verdi i minnet
+- **Tallpanel (venstre)**:
+  - Tallknapper 0-9 arrangert som et standard nummerpanel
+  - Desimalknapper: . og , (begge gir .)
+  - ⌫ (Backspace): Sletter siste tegn
+  - +/-: Bytter fortegn
+  - C: Tømmer alle felt
+- **Operasjonspanel (høyre)**:
+  - Aritmetiske operasjoner: +, -, *, /, %, sqrt
+  - Minneknapper: M+, M-, MR, MC
+  - Avslutt-knapp
+
+### Bruksanvisning
+
+1. **Skriv inn tall**: Bruk enten tastatur eller tallknappene (0-9)
+   - Tallknappene legger til siffer i feltet som har fokus
+   - Klikk i et felt for å gi det fokus
+2. **Desimal**: Klikk på . eller , for desimaltegn
+3. **Endre fortegn**: Klikk +/- for å gjøre tall negativt/positivt
+4. **Velg operasjon**: Klikk på ønsket operasjon (+, -, *, /, %, sqrt)
+5. **Se resultat**: Resultatet vises i resultatfeltet
+6. **Minneoperasjoner**:
+   - Etter en beregning, klikk **M+** for å legge resultatet til minnet
+   - Klikk **M-** for å trekke resultatet fra minnet
+   - Klikk **MR** for å hente minnets verdi
+   - Klikk **MC** for å tømme minnet
+7. **Tøm felt**: Klikk **C** eller trykk **Esc**
+
 ### Tastatursnarveier
 - **Enter**: Beregn med siste operasjon
 - **Ctrl+R**: Beregn på nytt
 - **Esc**: Tøm alle felt
 
-### Bruksanvisning
-
-1. **Skriv inn tall**: Skriv inn verdier i "Første tall" og "Andre tall"
-2. **Velg operasjon**: Klikk på ønsket operasjon (+, -, *, /, %, sqrt)
-3. **Se resultat**: Resultatet vises i resultatfeltet
-4. **Minneoperasjoner**:
-   - Etter en beregning, klikk **M+** for å legge resultatet til minnet
-   - Klikk **M-** for å trekke resultatet fra minnet
-   - Klikk **MR** for å se minnets verdi
-5. **Tøm felt**: Klikk **C** eller trykk **Esc**
-
 ### Eksempler
 
-#### Grunnleggende addisjon
-- Første tall: `15`
-- Andre tall: `7`
-- Operasjon: `+`
-- Resultat: `22`
+#### Grunnleggende addisjon med tallknapper
+1. Klikk i "Første tall"-feltet
+2. Klikk tallknappene: 1, 5
+3. Klikk i "Andre tall"-feltet
+4. Klikk tallknappene: 7
+5. Klikk på **+**-knappen
+6. Resultat: `22`
 
 #### Prosentberegning
 - Første tall: `200`
@@ -74,6 +103,17 @@ py gui_calculator.py
 - Første tall: `16`
 - Operasjon: `sqrt`
 - Resultat: `4`
+
+#### Bruk av +/- knapp
+1. Klikk i "Første tall"-feltet
+2. Skriv inn eller klikk: 5, 0
+3. Klikk **+/-** knappen
+4. Tallet endres til `-50`
+
+#### Bruk av desimal med komma
+1. Klikk i "Første tall"-feltet
+2. Klikk: 3, **,**, 1, 4
+3. Internt konverteres dette til `3.14`
 
 ## Pakking til .exe med PyInstaller
 
