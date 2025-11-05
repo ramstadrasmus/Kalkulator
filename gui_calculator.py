@@ -1,6 +1,7 @@
 """
 Windows GUI-kalkulator bygget med Tkinter.
 Konvertert fra CLI-versjon, beholder all matematikklogikk.
+Inkluderer tallknapper 0-9, desimalknapper, backspace og +/- funksjonalitet.
 """
 import tkinter as tk
 from tkinter import messagebox
@@ -23,7 +24,7 @@ class CalculatorApp:
         """
         self.root = root
         self.root.title("Kalkulator")
-        self.root.geometry("450x550")
+        self.root.geometry("600x700")
         self.root.resizable(False, False)
 
         # Minnevariabel (samme som i CLI-versjon)
@@ -41,7 +42,7 @@ class CalculatorApp:
     def _create_widgets(self) -> None:
         """Oppretter alle GUI-komponenter."""
         # Hovedcontainer med padding
-        main_frame = tk.Frame(self.root, padx=20, pady=20)
+        main_frame = tk.Frame(self.root, padx=15, pady=15)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Tittel
@@ -50,7 +51,7 @@ class CalculatorApp:
             text="Kalkulator",
             font=("Arial", 18, "bold")
         )
-        title_label.pack(pady=(0, 15))
+        title_label.pack(pady=(0, 10))
 
         # Input-felt for første tall
         input_frame_a = tk.Frame(main_frame)
@@ -66,8 +67,9 @@ class CalculatorApp:
 
         self.entry_a = tk.Entry(
             input_frame_a,
-            font=("Arial", 12),
-            width=25
+            font=("Arial", 14),
+            width=30,
+            justify="right"
         )
         self.entry_a.pack(side=tk.LEFT, padx=(5, 0))
 
@@ -85,14 +87,15 @@ class CalculatorApp:
 
         self.entry_b = tk.Entry(
             input_frame_b,
-            font=("Arial", 12),
-            width=25
+            font=("Arial", 14),
+            width=30,
+            justify="right"
         )
         self.entry_b.pack(side=tk.LEFT, padx=(5, 0))
 
         # Resultatfelt (readonly)
         result_frame = tk.Frame(main_frame)
-        result_frame.pack(fill=tk.X, pady=(15, 5))
+        result_frame.pack(fill=tk.X, pady=(10, 5))
 
         tk.Label(
             result_frame,
@@ -106,11 +109,12 @@ class CalculatorApp:
         result_entry = tk.Entry(
             result_frame,
             textvariable=self.result_var,
-            font=("Arial", 12, "bold"),
-            width=25,
+            font=("Arial", 14, "bold"),
+            width=30,
             state="readonly",
             readonlybackground="white",
-            fg="blue"
+            fg="blue",
+            justify="right"
         )
         result_entry.pack(side=tk.LEFT, padx=(5, 0))
 
@@ -126,62 +130,186 @@ class CalculatorApp:
         )
         self.memory_label.pack(anchor="w")
 
-        # Operasjonsknapper
-        button_frame = tk.Frame(main_frame)
-        button_frame.pack(pady=20)
+        # Hovedknapp-container (side ved side layout)
+        buttons_container = tk.Frame(main_frame)
+        buttons_container.pack(pady=15, fill=tk.BOTH, expand=True)
 
-        # Definerer knapper: (tekst, kommando, rad, kolonne, colspan)
-        buttons = [
-            ("+", lambda: self._perform_operation("+"), 0, 0, 1),
-            ("-", lambda: self._perform_operation("-"), 0, 1, 1),
-            ("*", lambda: self._perform_operation("*"), 0, 2, 1),
-            ("/", lambda: self._perform_operation("/"), 0, 3, 1),
+        # Venstre side: Tallpanel
+        numpad_frame = tk.Frame(buttons_container)
+        numpad_frame.pack(side=tk.LEFT, padx=(0, 10))
 
-            ("%", lambda: self._perform_operation("%"), 1, 0, 1),
-            ("sqrt", lambda: self._perform_operation("sqrt"), 1, 1, 1),
-            ("M+", self._memory_add, 1, 2, 1),
-            ("M-", self._memory_subtract, 1, 3, 1),
+        tk.Label(
+            numpad_frame,
+            text="Tallpanel",
+            font=("Arial", 10, "bold")
+        ).grid(row=0, column=0, columnspan=3, pady=(0, 5))
 
-            ("MR", self._memory_recall, 2, 0, 1),
-            ("C", self._clear, 2, 1, 1),
-            ("Avslutt", self._quit, 2, 2, 2),
+        # Tallknapper 7-8-9 / 4-5-6 / 1-2-3 / 0
+        numpad_buttons = [
+            ("7", 1, 0), ("8", 1, 1), ("9", 1, 2),
+            ("4", 2, 0), ("5", 2, 1), ("6", 2, 2),
+            ("1", 3, 0), ("2", 3, 1), ("3", 3, 2),
+            ("0", 4, 0),
         ]
 
-        # Oppretter knapper i grid
-        for text, command, row, col, colspan in buttons:
+        for text, row, col in numpad_buttons:
             btn = tk.Button(
-                button_frame,
+                numpad_frame,
+                text=text,
+                command=lambda t=text: self._append_digit(t),
+                font=("Arial", 14, "bold"),
+                width=5,
+                height=2,
+                bg="#e0e0e0"
+            )
+            btn.grid(row=row, column=col, padx=2, pady=2)
+
+        # Desimal og komma knapper
+        decimal_btn = tk.Button(
+            numpad_frame,
+            text=".",
+            command=lambda: self._append_digit("."),
+            font=("Arial", 14, "bold"),
+            width=5,
+            height=2,
+            bg="#d0d0d0"
+        )
+        decimal_btn.grid(row=4, column=1, padx=2, pady=2)
+
+        comma_btn = tk.Button(
+            numpad_frame,
+            text=",",
+            command=lambda: self._append_digit("."),  # Konverterer til .
+            font=("Arial", 14, "bold"),
+            width=5,
+            height=2,
+            bg="#d0d0d0"
+        )
+        comma_btn.grid(row=4, column=2, padx=2, pady=2)
+
+        # Backspace knapp
+        backspace_btn = tk.Button(
+            numpad_frame,
+            text="⌫",
+            command=self._backspace,
+            font=("Arial", 14, "bold"),
+            width=5,
+            height=2,
+            bg="#ffcccc"
+        )
+        backspace_btn.grid(row=5, column=0, padx=2, pady=2)
+
+        # +/- knapp
+        plusminus_btn = tk.Button(
+            numpad_frame,
+            text="+/-",
+            command=self._toggle_sign,
+            font=("Arial", 12, "bold"),
+            width=5,
+            height=2,
+            bg="#ccddff"
+        )
+        plusminus_btn.grid(row=5, column=1, padx=2, pady=2)
+
+        # Clear knapp
+        clear_btn = tk.Button(
+            numpad_frame,
+            text="C",
+            command=self._clear,
+            font=("Arial", 12, "bold"),
+            width=5,
+            height=2,
+            bg="#ffcccc"
+        )
+        clear_btn.grid(row=5, column=2, padx=2, pady=2)
+
+        # Høyre side: Operasjoner
+        operations_frame = tk.Frame(buttons_container)
+        operations_frame.pack(side=tk.LEFT)
+
+        tk.Label(
+            operations_frame,
+            text="Operasjoner",
+            font=("Arial", 10, "bold")
+        ).grid(row=0, column=0, columnspan=2, pady=(0, 5))
+
+        # Aritmetiske operasjoner
+        operation_buttons = [
+            ("+", lambda: self._perform_operation("+"), 1, 0),
+            ("-", lambda: self._perform_operation("-"), 1, 1),
+            ("*", lambda: self._perform_operation("*"), 2, 0),
+            ("/", lambda: self._perform_operation("/"), 2, 1),
+            ("%", lambda: self._perform_operation("%"), 3, 0),
+            ("sqrt", lambda: self._perform_operation("sqrt"), 3, 1),
+        ]
+
+        for text, command, row, col in operation_buttons:
+            btn = tk.Button(
+                operations_frame,
+                text=text,
+                command=command,
+                font=("Arial", 12, "bold"),
+                width=7,
+                height=2,
+                bg="#cceeff"
+            )
+            btn.grid(row=row, column=col, padx=2, pady=2)
+
+        # Minneknapper
+        tk.Label(
+            operations_frame,
+            text="Minne",
+            font=("Arial", 10, "bold")
+        ).grid(row=4, column=0, columnspan=2, pady=(10, 5))
+
+        memory_buttons = [
+            ("M+", self._memory_add, 5, 0),
+            ("M-", self._memory_subtract, 5, 1),
+            ("MR", self._memory_recall, 6, 0),
+            ("MC", self._memory_clear, 6, 1),
+        ]
+
+        for text, command, row, col in memory_buttons:
+            btn = tk.Button(
+                operations_frame,
                 text=text,
                 command=command,
                 font=("Arial", 11, "bold"),
-                width=8 if colspan == 1 else 17,
+                width=7,
                 height=2,
-                bg="#f0f0f0"
+                bg="#ffffcc"
             )
-            btn.grid(row=row, column=col, columnspan=colspan, padx=3, pady=3)
+            btn.grid(row=row, column=col, padx=2, pady=2)
+
+        # Avslutt-knapp
+        quit_btn = tk.Button(
+            operations_frame,
+            text="Avslutt",
+            command=self._quit,
+            font=("Arial", 11, "bold"),
+            width=15,
+            height=2,
+            bg="#ffcccc"
+        )
+        quit_btn.grid(row=7, column=0, columnspan=2, padx=2, pady=(10, 2))
 
         # Hjelpetekst
         help_frame = tk.Frame(main_frame)
         help_frame.pack(pady=(10, 0))
 
         help_text = (
-            "Tips:\n"
-            "• Bruk både '.' og ',' som desimalskille\n"
-            "• % beregner b prosent av a (200 % 10 = 20)\n"
-            "• sqrt bruker kun første tall\n"
-            "• M+/M- legger til/trekker fra resultat i minne\n"
-            "• MR viser minnets verdi\n"
+            "Tips: Bruk tallknapper eller tastatur • Både '.' og ',' som desimal\n"
+            "⌫ = slett siste tegn • +/- = bytt fortegn • % = b prosent av a\n"
+            "sqrt = kvadratrot (kun første tall) • M+ = legg til minne • M- = trekk fra minne\n"
+            "MR = hent fra minne • MC = tøm minne\n"
             "\n"
-            "Tastatursnarveier:\n"
-            "• Enter = beregn med siste operasjon\n"
-            "• Ctrl+R = beregn på nytt\n"
-            "• Esc = tøm felter"
+            "Tastatursnarveier: Enter = beregn • Ctrl+R = beregn på nytt • Esc = tøm felter"
         )
 
         help_label = tk.Label(
             help_frame,
             text=help_text,
-            font=("Arial", 9),
+            font=("Arial", 8),
             justify=tk.LEFT,
             fg="gray"
         )
@@ -197,6 +325,69 @@ class CalculatorApp:
 
         # Esc = clear
         self.root.bind("<Escape>", lambda e: self._clear())
+
+    def _get_focused_entry(self) -> Optional[tk.Entry]:
+        """
+        Returnerer Entry-widgeten som har fokus.
+
+        Returns:
+            Entry-widget med fokus, eller None hvis ingen har fokus
+        """
+        focused = self.root.focus_get()
+        if focused == self.entry_a:
+            return self.entry_a
+        elif focused == self.entry_b:
+            return self.entry_b
+        # Hvis ingen har fokus, returner entry_a som default
+        return self.entry_a
+
+    def _append_digit(self, digit: str) -> None:
+        """
+        Legger til et siffer eller desimaltegn til feltet med fokus.
+
+        Args:
+            digit: Sifferet eller tegnet som skal legges til
+        """
+        entry = self._get_focused_entry()
+        if entry:
+            current_pos = entry.index(tk.INSERT)
+            entry.insert(current_pos, digit)
+            entry.focus_set()
+
+    def _backspace(self) -> None:
+        """Fjerner siste tegn fra feltet med fokus (⌫)."""
+        entry = self._get_focused_entry()
+        if entry:
+            current_value = entry.get()
+            if current_value:
+                entry.delete(len(current_value) - 1, tk.END)
+            entry.focus_set()
+
+    def _toggle_sign(self) -> None:
+        """Bytter fortegn på tallet i feltet med fokus (+/-)."""
+        entry = self._get_focused_entry()
+        if entry:
+            current_value = entry.get().strip()
+            if not current_value:
+                return
+
+            # Prøv å parse som tall
+            num = self._parse_number(current_value)
+            if num is not None:
+                # Bytt fortegn
+                new_value = -num
+                entry.delete(0, tk.END)
+                entry.insert(0, str(new_value))
+            elif current_value.startswith("-"):
+                # Fjern minustegn hvis strengen starter med det
+                entry.delete(0, tk.END)
+                entry.insert(0, current_value[1:])
+            else:
+                # Legg til minustegn
+                entry.delete(0, tk.END)
+                entry.insert(0, "-" + current_value)
+
+            entry.focus_set()
 
     def _parse_number(self, value: str) -> Optional[float]:
         """
@@ -362,6 +553,12 @@ class CalculatorApp:
         """Viser minnets verdi i resultatfeltet (MR)."""
         self.result_var.set(str(self.memory))
         messagebox.showinfo("Minne", f"Minne: {self.memory}")
+
+    def _memory_clear(self) -> None:
+        """Tømmer minnet (MC)."""
+        self.memory = 0.0
+        self._update_memory_display()
+        messagebox.showinfo("Minne", "Minnet er tømt.")
 
     def _update_memory_display(self) -> None:
         """Oppdaterer minnevisningen."""
