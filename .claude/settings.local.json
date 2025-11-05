@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python gui_calculator.py:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
